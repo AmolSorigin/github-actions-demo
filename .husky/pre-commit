@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged to auto-fix and format staged files
+npx lint-staged
+
+# Run full lint check (will fail if there are unfixable errors)
+npm run lint
+
+# Run build check (will fail if TypeScript compilation fails)
+npm run build
+
