@@ -50,6 +50,8 @@ jobs:
             cd ${{ secrets.EC2_APP_PATH }}
             unzip -o app.zip
             rm -f app.zip
+            # Create .env file from GitHub Secret
+            echo "${{ secrets.EC2_ENV_FILE }}" > .env
             npm install --production
             pm2 restart github-actions-demo || pm2 start dist/server.js --name github-actions-demo
             pm2 save

@@ -1,5 +1,7 @@
 import express from 'express';
 import { envConfig } from './config/env';
+import { sesRouter } from './features/aws/ses';
+import { snsRouter } from './features/aws/sns';
 
 const app = express();
 
@@ -27,6 +29,12 @@ app.get('/api/test', (_req, res) => {
     message: 'Test endpoint working',
   });
 });
+
+// AWS SES Email routes
+app.use('/api/aws/ses', sesRouter);
+
+// AWS SNS Push Notification routes
+app.use('/api/aws/sns', snsRouter);
 
 app.listen(port, () => {
   console.log(`Server running in ${nodeEnv} mode on port ${port}`);
