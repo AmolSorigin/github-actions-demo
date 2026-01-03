@@ -4,7 +4,6 @@
 export interface PublishPushNotificationParams {
   /**
    * FCM Platform Application ARN (required for push notifications)
-   * Format: arn:aws:sns:region:account-id:app/FCM/platform-name
    */
   platformApplicationArn: string;
   /**
@@ -19,10 +18,6 @@ export interface PublishPushNotificationParams {
    * Optional title for the notification
    */
   title?: string;
-  /**
-   * Optional subtitle for the notification
-   */
-  subtitle?: string;
   /**
    * Optional badge count
    */

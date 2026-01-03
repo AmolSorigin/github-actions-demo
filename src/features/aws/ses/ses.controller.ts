@@ -2,6 +2,15 @@ import { Request, Response } from 'express';
 import { sendEmail } from './ses.service';
 import { sendEmailSchema } from './ses.validation';
 import type { SendEmailParams } from './ses.types';
+import {
+  sendSuccessResponse,
+  sendValidationErrorResponse,
+  sendErrorResponse,
+  sendInternalServerErrorResponse,
+} from '../../../utils/response';
+import { HTTP_STATUS } from '../../../constants';
+import { ERROR_MESSAGES } from '../../../constants/errorMessages';
+import { SUCCESS_MESSAGES } from '../../../constants/successMessages';
 
 /**
  * POST /api/aws/ses/send-email
@@ -17,11 +26,7 @@ export async function sendEmailHandler(req: Request, res: Response): Promise<Res
 
     if (error) {
       const errorMessages = error.details.map((detail) => detail.message);
-      return res.status(400).json({
-        success: false,
-        error: 'Validation failed',
-        details: errorMessages,
-      });
+      return sendValidationErrorResponse(res, errorMessages);
     }
 
     const { to, subject, body, from, replyTo, isHtml } = value;
@@ -38,22 +43,18 @@ export async function sendEmailHandler(req: Request, res: Response): Promise<Res
     const result = await sendEmail(params);
 
     if (result.success) {
-      return res.status(200).json({
-        success: true,
+      return sendSuccessResponse(res, HTTP_STATUS.OK, SUCCESS_MESSAGES.EMAIL_SENT, {
         messageId: result.messageId,
-        message: 'Email sent successfully',
       });
     } else {
-      return res.status(500).json({
-        success: false,
-        error: result.error || 'Failed to send email',
-      });
+      return sendErrorResponse(
+        res,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        result.error || ERROR_MESSAGES.EMAIL_SEND_FAILED,
+      );
     }
   } catch (error) {
     console.error('Error in send-email endpoint:', error);
-    return res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Internal server error',
-    });
+    return sendInternalServerErrorResponse(res, error instanceof Error ? error.message : undefined);
   }
 }

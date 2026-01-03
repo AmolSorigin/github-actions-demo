@@ -2,6 +2,15 @@ import { Request, Response } from 'express';
 import { publishPushNotification, sendSMS } from './sns.service';
 import { publishPushNotificationSchema, sendSMSSchema } from './sns.validation';
 import type { PublishPushNotificationParams, SendSMSParams } from './sns.types';
+import {
+  sendSuccessResponse,
+  sendValidationErrorResponse,
+  sendErrorResponse,
+  sendInternalServerErrorResponse,
+} from '../../../utils/response';
+import { HTTP_STATUS } from '../../../constants';
+import { ERROR_MESSAGES } from '../../../constants/errorMessages';
+import { SUCCESS_MESSAGES } from '../../../constants/successMessages';
 
 /**
  * POST /api/aws/sns/publish-push
@@ -20,30 +29,16 @@ export async function publishPushNotificationHandler(
 
     if (error) {
       const errorMessages = error.details.map((detail) => detail.message);
-      return res.status(400).json({
-        success: false,
-        error: 'Validation failed',
-        details: errorMessages,
-      });
+      return sendValidationErrorResponse(res, errorMessages);
     }
 
-    const {
-      platformApplicationArn,
-      deviceToken,
-      message,
-      title,
-      subtitle,
-      badge,
-      sound,
-      customData,
-    } = value;
+    const { platformApplicationArn, deviceToken, message, title, badge, sound, customData } = value;
 
     const params: PublishPushNotificationParams = {
       platformApplicationArn,
       deviceToken,
       message,
       ...(title && { title }),
-      ...(subtitle && { subtitle }),
       ...(badge !== undefined && { badge }),
       ...(sound && { sound }),
       ...(customData && { customData }),
@@ -52,24 +47,20 @@ export async function publishPushNotificationHandler(
     const result = await publishPushNotification(params);
 
     if (result.success) {
-      return res.status(200).json({
-        success: true,
+      return sendSuccessResponse(res, HTTP_STATUS.OK, SUCCESS_MESSAGES.PUSH_NOTIFICATION_SENT, {
         messageId: result.messageId,
         endpointArn: result.endpointArn,
-        message: 'Push notification sent successfully',
       });
     } else {
-      return res.status(500).json({
-        success: false,
-        error: result.error || 'Failed to send push notification',
-      });
+      return sendErrorResponse(
+        res,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        result.error || ERROR_MESSAGES.PUSH_NOTIFICATION_FAILED,
+      );
     }
   } catch (error) {
     console.error('Error in publish-push endpoint:', error);
-    return res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Internal server error',
-    });
+    return sendInternalServerErrorResponse(res, error instanceof Error ? error.message : undefined);
   }
 }
 
@@ -87,11 +78,7 @@ export async function sendSMSHandler(req: Request, res: Response): Promise<Respo
 
     if (error) {
       const errorMessages = error.details.map((detail) => detail.message);
-      return res.status(400).json({
-        success: false,
-        error: 'Validation failed',
-        details: errorMessages,
-      });
+      return sendValidationErrorResponse(res, errorMessages);
     }
 
     const { phoneNumber, message, senderId } = value;
@@ -105,22 +92,18 @@ export async function sendSMSHandler(req: Request, res: Response): Promise<Respo
     const result = await sendSMS(params);
 
     if (result.success) {
-      return res.status(200).json({
-        success: true,
+      return sendSuccessResponse(res, HTTP_STATUS.OK, SUCCESS_MESSAGES.SMS_SENT, {
         messageId: result.messageId,
-        message: 'SMS sent successfully',
       });
     } else {
-      return res.status(500).json({
-        success: false,
-        error: result.error || 'Failed to send SMS',
-      });
+      return sendErrorResponse(
+        res,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        result.error || ERROR_MESSAGES.SMS_SEND_FAILED,
+      );
     }
   } catch (error) {
     console.error('Error in send-sms endpoint:', error);
-    return res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Internal server error',
-    });
+    return sendInternalServerErrorResponse(res, error instanceof Error ? error.message : undefined);
   }
 }

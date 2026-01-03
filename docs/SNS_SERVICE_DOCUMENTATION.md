@@ -18,7 +18,7 @@
 
 The AWS SNS Service provides two main functionalities:
 
-1. **Push Notifications (FCM)**: Send push notifications directly to mobile devices using Firebase Cloud Messaging (FCM) through AWS SNS
+1. **Push Notifications (GCM)**: Send push notifications directly to mobile devices using Google Cloud Messaging (GCM) through AWS SNS
 2. **SMS Notifications**: Send SMS messages directly to phone numbers using AWS SNS
 
 Both services send messages directly without requiring topics or subscriptions, making them ideal for one-to-one communication.
@@ -36,13 +36,13 @@ Both services send messages directly without requiring topics or subscriptions, 
    - IAM user/role with SNS permissions
 3. **AWS Region**: Configure your preferred AWS region
 
-### For Push Notifications (FCM)
+### For Push Notifications (GCM)
 
-1. **FCM Platform Application**: Create an FCM Platform Application in AWS SNS
+1. **GCM Platform Application**: Create a GCM Platform Application in AWS SNS
    - Go to AWS SNS Console → Mobile → Push notifications
-   - Create platform application → Select FCM (Firebase Cloud Messaging)
+   - Create platform application → Select GCM (Google Cloud Messaging)
    - Upload your FCM Server Key
-   - Note the Platform Application ARN (format: `arn:aws:sns:region:account-id:app/FCM/platform-name`)
+   - Note the Platform Application ARN (format: `arn:aws:sns:region:account-id:app/GCM/platform-name`)
 
 ### For SMS
 
@@ -64,8 +64,8 @@ AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your_aws_access_key_id
 AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
 
-# Optional: Default FCM Platform Application ARN
-AWS_SNS_PLATFORM_APPLICATION_ARN=arn:aws:sns:us-east-1:123456789012:app/FCM/my-app
+# Optional: Default GCM Platform Application ARN
+AWS_SNS_PLATFORM_APPLICATION_ARN=arn:aws:sns:us-east-1:123456789012:app/GCM/my-app
 ```
 
 ### Required IAM Permissions
@@ -104,12 +104,12 @@ http://localhost:3000/api/aws/sns
 
 | Method | Endpoint        | Description                    |
 | ------ | --------------- | ------------------------------ |
-| POST   | `/publish-push` | Send push notification via FCM |
+| POST   | `/publish-push` | Send push notification via GCM |
 | POST   | `/send-sms`     | Send SMS to phone number       |
 
 ---
 
-## Push Notifications (FCM)
+## Push Notifications (GCM)
 
 ### Endpoint
 
@@ -119,17 +119,16 @@ POST /api/aws/sns/publish-push
 
 ### Description
 
-Sends push notifications directly to mobile devices using FCM. The service automatically creates platform endpoints from device tokens if needed.
+Sends push notifications directly to mobile devices using GCM. The service automatically creates platform endpoints from device tokens if needed.
 
 ### Request Body
 
 | Field                    | Type   | Required | Description                                                                                  |
 | ------------------------ | ------ | -------- | -------------------------------------------------------------------------------------------- |
-| `platformApplicationArn` | string | Yes      | FCM Platform Application ARN (format: `arn:aws:sns:region:account-id:app/FCM/platform-name`) |
+| `platformApplicationArn` | string | Yes      | GCM Platform Application ARN (format: `arn:aws:sns:region:account-id:app/GCM/platform-name`) |
 | `deviceToken`            | string | Yes      | FCM device token or existing endpoint ARN                                                    |
 | `message`                | string | Yes      | Notification message body (1-2000 characters)                                                |
 | `title`                  | string | No       | Notification title (1-100 characters)                                                        |
-| `subtitle`               | string | No       | Additional text combined with message (1-200 characters)                                     |
 | `badge`                  | number | No       | Badge count (integer, ≥ 0)                                                                   |
 | `sound`                  | string | No       | Sound file name (1-50 characters, e.g., "default")                                           |
 | `customData`             | object | No       | Custom key-value pairs for app logic (values: string, number, or boolean)                    |
@@ -138,11 +137,10 @@ Sends push notifications directly to mobile devices using FCM. The service autom
 
 ```json
 {
-  "platformApplicationArn": "arn:aws:sns:us-east-1:123456789012:app/FCM/my-app",
+  "platformApplicationArn": "arn:aws:sns:us-east-1:123456789012:app/GCM/my-app",
   "deviceToken": "fcm-device-token-here",
   "message": "You have a new message!",
   "title": "New Notification",
-  "subtitle": "From John Doe",
   "sound": "default",
   "badge": 1,
   "customData": {
@@ -194,7 +192,7 @@ Sends push notifications directly to mobile devices using FCM. The service autom
 curl -X POST http://localhost:3000/api/aws/sns/publish-push \
   -H "Content-Type: application/json" \
   -d '{
-    "platformApplicationArn": "arn:aws:sns:us-east-1:123456789012:app/FCM/my-app",
+    "platformApplicationArn": "arn:aws:sns:us-east-1:123456789012:app/GCM/my-app",
     "deviceToken": "fcm-device-token-here",
     "message": "Hello from SNS!",
     "title": "Test Notification"
@@ -207,11 +205,10 @@ curl -X POST http://localhost:3000/api/aws/sns/publish-push \
 curl -X POST http://localhost:3000/api/aws/sns/publish-push \
   -H "Content-Type: application/json" \
   -d '{
-    "platformApplicationArn": "arn:aws:sns:us-east-1:123456789012:app/FCM/my-app",
+    "platformApplicationArn": "arn:aws:sns:us-east-1:123456789012:app/GCM/my-app",
     "deviceToken": "fcm-device-token-here",
     "message": "Your order has been shipped",
     "title": "Order Update",
-    "subtitle": "Order #12345",
     "sound": "default",
     "badge": 1,
     "customData": {
@@ -229,8 +226,8 @@ curl -X POST http://localhost:3000/api/aws/sns/publish-push \
 curl -X POST http://localhost:3000/api/aws/sns/publish-push \
   -H "Content-Type: application/json" \
   -d '{
-    "platformApplicationArn": "arn:aws:sns:us-east-1:123456789012:app/FCM/my-app",
-    "deviceToken": "arn:aws:sns:us-east-1:123456789012:endpoint/FCM/my-app/abc123",
+    "platformApplicationArn": "arn:aws:sns:us-east-1:123456789012:app/GCM/my-app",
+    "deviceToken": "arn:aws:sns:us-east-1:123456789012:endpoint/GCM/my-app/abc123",
     "message": "Quick notification",
     "title": "Alert"
   }'
@@ -240,32 +237,26 @@ curl -X POST http://localhost:3000/api/aws/sns/publish-push \
 
 #### `platformApplicationArn`
 
-- **Format**: `arn:aws:sns:region:account-id:app/FCM/platform-name`
-- **Example**: `arn:aws:sns:us-east-1:123456789012:app/FCM/my-mobile-app`
-- Must be a valid FCM Platform Application ARN created in AWS SNS
+- **Format**: `arn:aws:sns:region:account-id:app/GCM/platform-name`
+- **Example**: `arn:aws:sns:us-east-1:123456789012:app/GCM/my-mobile-app`
+- Must be a valid GCM Platform Application ARN created in AWS SNS
 
 #### `deviceToken`
 
 - Can be either:
   - **FCM Device Token**: Raw FCM registration token from the mobile app
-  - **Endpoint ARN**: Existing AWS SNS endpoint ARN (format: `arn:aws:sns:region:account-id:endpoint/FCM/platform-name/endpoint-id`)
+  - **Endpoint ARN**: Existing AWS SNS endpoint ARN (format: `arn:aws:sns:region:account-id:endpoint/GCM/platform-name/endpoint-id`)
 - If device token is provided, the service automatically creates/retrieves the endpoint ARN
 
 #### `message`
 
 - Main notification text
-- Combined with `subtitle` if provided (separated by newline)
 - Maximum 2000 characters
 
 #### `title`
 
 - Notification title displayed at the top
 - Maximum 100 characters
-
-#### `subtitle`
-
-- Additional text combined with message in the notification body
-- Maximum 200 characters
 
 #### `sound`
 
@@ -437,7 +428,7 @@ All error responses follow this format:
 ```json
 {
   "success": false,
-  "error": "platformApplicationArn must be for FCM platform (format: arn:aws:sns:region:account-id:app/FCM/platform-name)"
+  "error": "platformApplicationArn must be for GCM platform (format: arn:aws:sns:region:account-id:app/GCM/platform-name)"
 }
 ```
 
@@ -569,7 +560,7 @@ try {
 
 ### Push Notifications Not Received
 
-1. **Check Platform ARN**: Verify the Platform Application ARN is correct and for FCM.
+1. **Check Platform ARN**: Verify the Platform Application ARN is correct and for GCM.
 2. **Verify Device Token**: Ensure the device token is valid and not expired.
 3. **Check AWS Credentials**: Verify AWS credentials have SNS permissions.
 4. **Review AWS CloudWatch Logs**: Check SNS logs in AWS Console for detailed errors.
@@ -606,7 +597,7 @@ try {
 ## Additional Resources
 
 - [AWS SNS Documentation](https://docs.aws.amazon.com/sns/)
-- [FCM Documentation](https://firebase.google.com/docs/cloud-messaging)
+- [GCM/FCM Documentation](https://firebase.google.com/docs/cloud-messaging)
 - [E.164 Phone Number Format](https://en.wikipedia.org/wiki/E.164)
 - [AWS SNS Pricing](https://aws.amazon.com/sns/pricing/)
 

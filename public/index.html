@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCM Push Notification Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .token-display {
+            background: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            padding: 12px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #333;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+        }
+
+        .token-display:empty::before {
+            content: 'FCM token will appear here after clicking "Get FCM Token"';
+            color: #999;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            margin-top: 10px;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #004085;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .notifications-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notification-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #6c757d;
+            white-space: nowrap;
+        }
+
+        .notification-body {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .notification-empty {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        .clear-btn {
+            background: #dc3545;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 FCM Push Notification Test</h1>
+        <p class="subtitle">Get FCM token and send push notifications</p>
+
+        <!-- Firebase Configuration Section -->
+        <div class="section">
+            <div class="section-title">Firebase Configuration</div>
+            <div class="input-group">
+                <label for="firebaseConfig">Firebase Config (JSON)</label>
+                <textarea 
+                    id="firebaseConfig" 
+                    placeholder='{"apiKey": "...", "authDomain": "...", "projectId": "...", "storageBucket": "...", "messagingSenderId": "...", "appId": "...", "vapidKey": "..."}'
+                ></textarea>
+                <div class="info-box">
+                    <strong>Note:</strong> Get this from Firebase Console → Project Settings → Your apps → Web app config
+                </div>
+            </div>
+            <button class="btn" onclick="initializeFirebase()">Initialize Firebase</button>
+        </div>
+
+        <!-- Get FCM Token Section -->
+        <div class="section">
+            <div class="section-title">1. Get FCM Token</div>
+            <button class="btn" id="getTokenBtn" onclick="getFCMToken()" disabled>Get FCM Token</button>
+            <div class="input-group" style="margin-top: 20px;">
+                <label>FCM Token:</label>
+                <div class="token-display" id="tokenDisplay"></div>
+            </div>
+            <div class="status" id="tokenStatus"></div>
+        </div>
+
+        <!-- Send Notification Section -->
+        <div class="section">
+            <div class="section-title">2. Send Push Notification</div>
+            <div class="input-group">
+                <label for="platformArn">Platform Application ARN *</label>
+                <input 
+                    type="text" 
+                    id="platformArn" 
+                    placeholder="arn:aws:sns:us-east-1:123456789012:app/FCM/your-app-name"
+                    required
+                />
+            </div>
+            <div class="input-group">
+                <label for="message">Message *</label>
+                <textarea 
+                    id="message" 
+                    placeholder="Enter notification message"
+                    required
+                ></textarea>
+            </div>
+            <div class="input-group">
+                <label for="title">Title (Optional)</label>
+                <input 
+                    type="text" 
+                    id="title" 
+                    placeholder="Notification title"
+                />
+            </div>
+            <button class="btn" id="sendBtn" onclick="sendNotification()" disabled>Send Push Notification</button>
+            <div class="status" id="sendStatus"></div>
+        </div>
+
+        <!-- Received Notifications Section -->
+        <div class="section">
+            <div class="section-title">3. Received Notifications</div>
+            <div class="notifications-list" id="notificationsList">
+                <div class="notification-empty">No notifications received yet</div>
+            </div>
+            <button class="btn btn-secondary clear-btn" onclick="clearNotifications()" id="clearBtn" style="display: none;">Clear All</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+
+        let app = null;
+        let messaging = null;
+
+        window.initializeFirebase = function() {
+            const configText = document.getElementById('firebaseConfig').value.trim();
+            if (!configText) {
+                alert('Please enter Firebase configuration');
+                return;
+            }
+
+            try {
+                const firebaseConfig = JSON.parse(configText);
+                
+                // Initialize Firebase
+                app = initializeApp(firebaseConfig);
+                messaging = getMessaging(app);
+                
+                // Enable Get Token button
+                document.getElementById('getTokenBtn').disabled = false;
+                
+                // Show success message
+                document.getElementById('tokenStatus').textContent = 'Firebase initialized successfully!';
+                document.getElementById('tokenStatus').className = 'status success';
+                
+                // Listen for foreground messages
+                onMessage(messaging, (payload) => {
+                    console.log('Foreground message received:', payload);
+                    
+                    // Extract notification data
+                    const title = payload.notification?.title || payload.data?.title || 'Notification';
+                    const body = payload.notification?.body || payload.data?.body || payload.data?.message || 'You have a new notification';
+                    
+                    // Filter out default, FCM, GCM keys from custom data as they're internal SNS keys
+                    const customData = { ...(payload.data || {}) };
+                    delete customData.default;
+                    delete customData.FCM;
+                    delete customData.GCM;
+                    
+                    // Add to notifications list on page
+                    addNotificationToList(title, body, customData);
+                    
+                    // Show notification using browser API for foreground messages
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        new Notification(title, {
+                            body: body,
+                            icon: '/icon-192x192.png',
+                            badge: '/badge-72x72.png',
+                            tag: 'fcm-notification',
+                            data: { title, body, customData: payload.data || {} }
+                        });
+                    } else {
+                        // Fallback to alert if notifications not available
+                        alert(`${title}\n${body}`);
+                    }
+                });
+
+            } catch (error) {
+                alert('Invalid Firebase configuration JSON: ' + error.message);
+            }
+        };
+
+        window.getFCMToken = async function() {
+            if (!messaging) {
+                alert('Please initialize Firebase first');
+                return;
+            }
+
+            try {
+                const statusDiv = document.getElementById('tokenStatus');
+                statusDiv.textContent = 'Requesting permission and getting token...';
+                statusDiv.className = 'status';
+
+                // Request permission
+                const permission = await Notification.requestPermission();
+                
+                if (permission === 'granted') {
+                    // Get token
+                    const token = await getToken(messaging, {
+                        vapidKey: JSON.parse(document.getElementById('firebaseConfig').value).vapidKey
+                    });
+
+                    if (token) {
+                        document.getElementById('tokenDisplay').textContent = token;
+                        statusDiv.textContent = 'Token retrieved successfully!';
+                        statusDiv.className = 'status success';
+                        document.getElementById('sendBtn').disabled = false;
+                    } else {
+                        statusDiv.textContent = 'No token available. Check Firebase configuration.';
+                        statusDiv.className = 'status error';
+                    }
+                } else {
+                    statusDiv.textContent = 'Notification permission denied. Please enable notifications in browser settings.';
+                    statusDiv.className = 'status error';
+                }
+            } catch (error) {
+                console.error('Error getting token:', error);
+                document.getElementById('tokenStatus').textContent = 'Error: ' + error.message;
+                document.getElementById('tokenStatus').className = 'status error';
+            }
+        };
+
+        window.sendNotification = async function() {
+            const token = document.getElementById('tokenDisplay').textContent.trim();
+            const platformArn = document.getElementById('platformArn').value.trim();
+            const message = document.getElementById('message').value.trim();
+            const title = document.getElementById('title').value.trim();
+
+            if (!token) {
+                alert('Please get FCM token first');
+                return;
+            }
+
+            if (!platformArn || !message) {
+                alert('Please fill in Platform ARN and Message');
+                return;
+            }
+
+            const statusDiv = document.getElementById('sendStatus');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            sendBtn.disabled = true;
+            statusDiv.textContent = 'Sending notification...';
+            statusDiv.className = 'status';
+
+            try {
+                const payload = {
+                    platformApplicationArn: platformArn,
+                    deviceToken: token,
+                    message: message,
+                    ...(title && { title })
+                };
+
+                const response = await fetch('/api/aws/sns/publish-push', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    statusDiv.textContent = `Success! Message ID: ${data.data?.messageId || 'N/A'}`;
+                    statusDiv.className = 'status success';
+                } else {
+                    statusDiv.textContent = `Error: ${data.error || 'Unknown error'}`;
+                    statusDiv.className = 'status error';
+                }
+            } catch (error) {
+                statusDiv.textContent = 'Error: ' + error.message;
+                statusDiv.className = 'status error';
+            } finally {
+                sendBtn.disabled = false;
+            }
+        };
+
+        // Function to add notification to the list on the page
+        window.addNotificationToList = function(title, body, customData = {}) {
+            const notificationsList = document.getElementById('notificationsList');
+            const clearBtn = document.getElementById('clearBtn');
+            
+            // Remove empty message if present
+            const emptyMsg = notificationsList.querySelector('.notification-empty');
+            if (emptyMsg) {
+                emptyMsg.remove();
+            }
+            
+            // Show clear button
+            clearBtn.style.display = 'block';
+            
+            // Create notification item
+            const notificationItem = document.createElement('div');
+            notificationItem.className = 'notification-item';
+            
+            const time = new Date().toLocaleTimeString();
+            const date = new Date().toLocaleDateString();
+            
+            notificationItem.innerHTML = `
+                <div class="notification-header">
+                    <div>
+                        <div class="notification-title">${escapeHtml(title)}</div>
+                        <div class="notification-time">${date} at ${time}</div>
+                    </div>
+                </div>
+                <div class="notification-body">${escapeHtml(body)}</div>
+                ${Object.keys(customData).length > 0 ? `
+                    <div style="font-size: 12px; color: #6c757d; margin-top: 8px;">
+                        <strong>Data:</strong> ${JSON.stringify(customData, null, 2)}
+                    </div>
+                ` : ''}
+            `;
+            
+            // Insert at the top
+            notificationsList.insertBefore(notificationItem, notificationsList.firstChild);
+            
+            // Scroll to top
+            notificationsList.scrollTop = 0;
+        };
+
+        // Function to clear all notifications
+        window.clearNotifications = function() {
+            const notificationsList = document.getElementById('notificationsList');
+            const clearBtn = document.getElementById('clearBtn');
+            
+            notificationsList.innerHTML = '<div class="notification-empty">No notifications received yet</div>';
+            clearBtn.style.display = 'none';
+        };
+
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Check for notification data from service worker (when notification is clicked)
+        window.addEventListener('load', () => {
+            // Listen for messages from service worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    console.log('Message from service worker:', event.data);
+                    if (event.data && event.data.type === 'NOTIFICATION_CLICKED') {
+                        const { title, body, data } = event.data;
+                        addNotificationToList(title, body, data || {});
+                        // Scroll to notifications section
+                        document.getElementById('notificationsList').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

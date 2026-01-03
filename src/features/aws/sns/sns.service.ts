@@ -8,20 +8,21 @@ import type {
 } from './sns.types';
 
 /**
- * Build FCM message payload
+ * Build GCM message payload
+ * Platform key is always GCM
  */
 function buildFCMMessagePayload(params: PublishPushNotificationParams): string {
-  const { message, title, subtitle, sound, customData } = params;
+  const { message, title, sound, customData } = params;
 
-  // FCM payload structure
-  // Note: FCM notification object supports: title, body, sound
-  // If subtitle is provided, combine it with message for the body
-  const notificationBody = subtitle ? `${message}\n${subtitle}` : message;
+  // Platform key is always GCM
+  const platformKey = 'GCM';
 
+  // GCM payload structure
+  // Note: GCM notification object supports: title, body, sound
   const fcmPayload: Record<string, unknown> = {
     notification: {
       ...(title && { title }),
-      body: notificationBody,
+      body: message,
       ...(sound && { sound }),
     },
     ...(customData && { data: customData }),
@@ -30,12 +31,12 @@ function buildFCMMessagePayload(params: PublishPushNotificationParams): string {
   // SNS requires a JSON structure with 'default' and platform-specific keys
   return JSON.stringify({
     default: message,
-    FCM: JSON.stringify(fcmPayload),
+    [platformKey]: JSON.stringify(fcmPayload),
   });
 }
 
 /**
- * Publish a push notification directly to a device using AWS SNS with FCM
+ * Publish a push notification directly to a device using AWS SNS with GCM
  * This method sends notifications directly without requiring topics or subscriptions
  *
  * @param params - Push notification parameters
@@ -52,15 +53,6 @@ export async function publishPushNotification(
       return {
         success: false,
         error: 'platformApplicationArn, deviceToken, and message are required',
-      };
-    }
-
-    // Validate that the ARN is for FCM platform
-    if (!platformApplicationArn.includes('/FCM/')) {
-      return {
-        success: false,
-        error:
-          'platformApplicationArn must be for FCM platform (format: arn:aws:sns:region:account-id:app/FCM/platform-name)',
       };
     }
 
@@ -111,7 +103,7 @@ export async function publishPushNotification(
     const command = new PublishCommand({
       TargetArn: targetArn,
       Message: messagePayload,
-      MessageStructure: 'json', // FCM requires JSON message structure
+      MessageStructure: 'json', // GCM requires JSON message structure
     });
 
     const response = await snsClient.send(command);

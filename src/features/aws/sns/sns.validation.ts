@@ -2,14 +2,11 @@ import Joi from 'joi';
 
 // Push notification validation schema for FCM
 export const publishPushNotificationSchema = Joi.object({
-  platformApplicationArn: Joi.string()
-    .pattern(/^arn:aws:sns:[^:]+:[^:]+:app\/FCM\/[^/]+/)
-    .required()
-    .messages({
-      'any.required': 'platformApplicationArn is required',
-      'string.pattern.base':
-        'platformApplicationArn must be a valid AWS SNS FCM Platform Application ARN (format: arn:aws:sns:region:account-id:app/FCM/platform-name)',
-    }),
+  platformApplicationArn: Joi.string().trim().min(1).required().messages({
+    'any.required': 'platformApplicationArn is required',
+    'string.empty': 'platformApplicationArn cannot be empty',
+    'string.min': 'platformApplicationArn must be at least 1 character',
+  }),
   deviceToken: Joi.string().trim().min(1).required().messages({
     'any.required': 'deviceToken is required',
     'string.empty': 'deviceToken cannot be empty',
@@ -25,11 +22,6 @@ export const publishPushNotificationSchema = Joi.object({
     'string.empty': 'title cannot be empty',
     'string.min': 'title must be at least 1 character',
     'string.max': 'title must not exceed 100 characters',
-  }),
-  subtitle: Joi.string().trim().min(1).max(200).optional().messages({
-    'string.empty': 'subtitle cannot be empty',
-    'string.min': 'subtitle must be at least 1 character',
-    'string.max': 'subtitle must not exceed 200 characters',
   }),
   badge: Joi.number().integer().min(0).optional().messages({
     'number.base': 'badge must be a number',
