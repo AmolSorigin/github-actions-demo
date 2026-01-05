@@ -17,6 +17,8 @@ logs/
 .env.*
 !.env.example
 
+ecosystem.config.js
+
 # Editor / OS
 .DS_Store
 Thumbs.db
