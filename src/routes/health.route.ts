@@ -22,6 +22,7 @@ router.get('/api/health', (_req: Request, res: Response): Response => {
     status: 'ok',
     environment: envConfig.nodeEnv,
     timestamp: new Date().toISOString(),
+    test: 'prod testing',
   });
 });
 
